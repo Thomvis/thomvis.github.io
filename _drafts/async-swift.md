@@ -1,6 +1,7 @@
 ---
 layout: post
 title: "Getting ahead of myself: how built-in Futures could look like in Swift"
+draft: true
 ---
 
 While I was preparing for my talk at SwiftSummit, I got a last minute idea on how Swift could incorporate Futures as a core language feature. This was on the morning of the second day of the conference, the day that I was speaking. The day before, I was taking part in a panel discussion on what will happen when Swift becomes Open Source. My brain must have mixed up the topic of the panel and the topic of my own talk and this little idea emerged. Too late for the presentation, I made some quick notes that I expanded on the flight back home. This is the expanded notes.
@@ -35,18 +36,22 @@ Force unwrapping (`!`) and optional chaining (`?`) could work the same way as th
 # A fluent interface to asynchronous values
 Futures enable you to work with asynchronous operations (and their results) as if they were synchronous:
 
-	let string = fetchAnswer().map { ans in
-		ans * 2
-	}.map { timesTwo in
-		"Answer times two is \(timesTwo)"
-	}
+{% highlight swift %}
+let string = fetchAnswer().map { ans in
+	ans * 2
+}.map { timesTwo in
+	"Answer times two is \(timesTwo)"
+}
+{% endhighlight %}
 
 This sample constructs the value of `string`, which is the result of an asynchronous operation  `fetchAnswer()`, times two and formatted in a string. Futures hide the complexity that you have to deal with around asynchronous operations. The exact same code would be valid if `fetchAnswer()` were to return an optional.
 
 It is however not as straight forward as dealing with regular synchronous values. All operations are performed inside a map closure, adding significant visual noise. What if all functions (and operators) accepted asynchronous versions of the parameter types they are defined with? That would make it possible to write the following:
 
-	let timesTwo: async Int = fetchAnswer() * 2
-	let string: async String = "Answer times two is \(timesTwo)
+{% highlight swift %}
+let timesTwo: async Int = fetchAnswer() * 2
+let string: async String = "Answer times two is \(timesTwo)
+{% endhighlight %}
 
 Again: The explicit type declarations were added for clarity, but should be unnecessary in real code.
 
@@ -54,24 +59,28 @@ The times operator (‘\*’) used in the code above is a function that takes tw
 
 From this, it is just a small step to allow calling functions of async types on the type they are wrapping:
 
-	let timesTwo: async Int = fetchAnswer().times(2)
+{% highlight swift %}
+let timesTwo: async Int = fetchAnswer().times(2)
+{% endhighlight %}
 
 (assuming there is a `times` function defined on `Int`)
 
-	let context: AnyObject?
-	let context: Optional<AnyObject>
+{% highlight swift %}
+let context: AnyObject?
+let context: Optional<AnyObject>
 
 
-	let data: async NSData
-	let data: Async<NSData>
+let data: async NSData
+let data: Async<NSData>
 
 
-	let data = session.fetch("http://www.example.org/birds.json")
-	let json: async [Dictionary<String, AnyObject>] = parse(data)
-	let birds = json.map(Bird.init)
-	let images = birds.map { session.fetchImage($0.imageUrl) }
-	let birdsAndImages: async [(Bird, UIImage)] = zip(birds, images)
-	
-	when let birdsAndImages = birdsAndImages {
-			tableView.reload()
-	}
+let data = session.fetch("http://www.example.org/birds.json")
+let json: async [Dictionary<String, AnyObject>] = parse(data)
+let birds = json.map(Bird.init)
+let images = birds.map { session.fetchImage($0.imageUrl) }
+let birdsAndImages: async [(Bird, UIImage)] = zip(birds, images)
+
+when let birdsAndImages = birdsAndImages {
+		tableView.reload()
+}
+{% endhighlight %}
