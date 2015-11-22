@@ -9,7 +9,7 @@ Swift is designed to be a great programming language for a lot of things. On the
 >
 > [link](https://developer.apple.com/library/ios/documentation/Swift/Conceptual/Swift_Programming_Language/index.html#//apple_ref/doc/uid/TP40014097-CH3-ID0)
 
-The reality however is that Swift will be mostly used for iOS and Mac app development. This will of course change when Swift is open sourced, but for the Apple platforms it will be the primary and (eventually) only language of choice.
+The reality however is that Swift will be mostly used for iOS and Mac app development. This could change of course when Swift is open sourced, but for the Apple platforms it will be the primary and (eventually) only language of choice.
 
 Wouldn't it be great if Swift made it easier to do some common tasks in modern app development. Things like networking and other asynchronous operations, user interface and interaction definitions and working with JSON. Swift has nothing that makes those tasks easier than when we were still writing Objective-C.
 
@@ -86,11 +86,50 @@ While it would be possible to programmatically generate Future-compatible versio
 
 For the remainder of this post, I'd like to think about what built-in support for asynchronous values would look like. Needless to say, anything beyond this point is merely a thought experiment, a mental preparation for a pull request that I'd love to file once Swift is open sourced. **It's Swift fan fiction.**
 
-# The async-type
+# The Async Type
 
-<!-- There's the concept 'optional' and there's the enum `Optional`. You're using both, but you often only see the first. You probably write `let a: Int?` and not `let a: Optional<Int>`. The latter reveals the implementation of the 'optional' concept. I'd like to argue that Futures can be the implementation of the 'asynchronous values' concept. -->
+I think it would be interesting if Swift would support Futures similar to how Optionals are implemented. There's the `Optional` enum, but you hardly ever use it directly. At the same time, almost all functionality of the optional type would work without language support. I really like this approach and would love to see a powerful Future type in the standard library that is boosted by special treatment by the compiler.
 
-Anything could be asynchronous, so it should be possible to mark anything as asynchronous. To see what the right approach for this would be, we can turn to the Swift grammar. The grammar is described and - to some extent - explained in the last chapter of the [Swift Programming Language](https://developer.apple.com/library/ios/documentation/Swift/Conceptual/Swift_Programming_Language/) book.
+Firstly we need a way to mark a type as asynchronous, like the question mark for optionals. Let's use the `async` keyword and allow it to be put in front of a type. If it is used in the return type of a function, the function becomes an asynchronous operation. Any functions called on an `async` type also become asynchronous operations.
+
+Let's revisit the previous example:
+
+{% highlight swift %}
+func stringAtUrl(url: String) -> async String { 
+    /* ... */ 
+}
+
+let str = stringAtUrl("http://example.com/helloworld")
+let lcStr = string.lowercaseString
+let hasPr = "helloworld example".hasPrefix(lcString)
+{% endhighlight %}
+
+The outcome of this code sample is `hasPr`, which is an `async Bool`. 
+
+For a lot of functions, operators included, the compiler could just generate asynchronous variants on the fly. For other situations, there should be a way to turn an asynchronous type into a regular type:
+
+{% highlight swift %}
+
+let asyncStr = stringAtUrl("http://example.com/helloworld")
+
+when let str = asyncStr else {
+    throw StringLoadingFailed()
+}
+
+textLabel.setText(str)
+{% endhighlight %}
+
+The `when let` statement pauses the execution of the current scope until the asynchronous string value has been resolved (i.e. fetched from the network). If the operation failed, the `else` clause is executed. If successfull, the execution will continue with a regular String value in `str`. While the execution is paused, control is returned to the previous frame on the stack. The return type of the scope that contains the `when let` statement has to be marked `async`. If it does not have a return type, it has to be marked as `async Void`.
+
+To check if an asynchronous value has already been resolved, optional*esque* syntax could be used: `if let str = asyncStr { ... }`, `asyncStr?.lowercaseString` as well as force unwrapping an asynchronous value using the exclamation mark, risking a runtime exception if the value is not yet there.
+
+CLOSING PARAGRAPH NEEDED
+
+<!-- If Swift wouldn't have optionals, third-party frameworks would be able to provide an implementation that is almost as powerful as the built-in Optional that we've come to know an love. Only `if let` statements, syntactic sugar in parameters and return types, and passing non-optional values as parameters to a function that expect their optional counterparts require special treatment by the compiler. -->
+
+<!-- ENDING: There's the concept 'asynchronous values' and there's the class 'Future'. You'd be using both, but you often only see the first. You'd probably write 'let a: async Int' and not `let a: Future<Int, Error>`. The latter reveals the implementation of the 'asynchronous values' concept. The language can hide the implementation with syntactic sugar, enabling a great way to deal with the complexities of asynchronous development. -->
+
+<!-- Anything could be asynchronous, so it should be possible to mark anything as asynchronous. To see what the right approach for this would be, we can turn to the Swift grammar. The grammar is described and - to some extent - explained in the last chapter of the [Swift Programming Language](https://developer.apple.com/library/ios/documentation/Swift/Conceptual/Swift_Programming_Language/) book.
 
 [type rule](https://developer.apple.com/library/ios/documentation/Swift/Conceptual/Swift_Programming_Language/Types.html#//apple_ref/doc/uid/TP40014097-CH31-ID445):
 
@@ -104,22 +143,7 @@ An optional type is a type followed by a question mark. *type* on the right side
 
 > *async-type* → **async** *type*
 
-This means you can have asynchronous arrays, functions, optionals and even recursive asynchronous types. When we then add *async-type* as one of the options on the right side of the arrow of the *type* rule, we can use `async` in all the appropriate places. The following then becomes valid Swift:
-
-{% highlight swift %}
-func stringAtUrl(url: String) -> async String { /* ... */ }
-
-let str: async String = stringAtUrl("http://example.com/helloworld")
-let lcStr: async String = string.lowercaseString
-{% endhighlight %}
-
-
-
-If Swift wouldn't have optionals, third-party frameworks would be able to provide an implementation that is almost as powerful as the built-in Optional that we've come to know an love. Only `if let` statements and passing non-optional values as parameters to a function that expect their optional counterparts require special treatment by the compiler.
-
-ENDING: There's the concept 'asynchronous values' and there's the class 'Future'. You'd be using both, but you often only see the first. You'd probably write 'let a: async Int' and not `let a: Future<Int, Error>`. The latter reveals the implementation of the 'asynchronous values' concept. The language can hide the implementation with syntactic sugar, enabling a great way to deal with the complexities of asynchronous development.
-
-
+This means you can have asynchronous arrays, functions, optionals and even recursive asynchronous types. When we then add *async-type* as one of the options on the right side of the arrow of the *type* rule, we can use `async` in all the appropriate places. The following then becomes valid Swift: -->
 
 
 
