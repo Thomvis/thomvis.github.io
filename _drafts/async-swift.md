@@ -1,14 +1,131 @@
 ---
 layout: post
-title: "Getting ahead of myself: how built-in Futures could look like in Swift"
-draft: true
+title: "Asynchronous values as first-class citizens in Swift"
 ---
 
-While I was preparing for my talk at SwiftSummit, I got a last minute idea on how Swift could incorporate Futures as a core language feature. This was on the morning of the second day of the conference, the day that I was speaking. The day before, I was taking part in a panel discussion on what will happen when Swift becomes Open Source. My brain must have mixed up the topic of the panel and the topic of my own talk and this little idea emerged. Too late for the presentation, I made some quick notes that I expanded on the flight back home. This is the expanded notes.
+Swift is designed to be a great programming language for a lot of things. On the first page of the Swift Programming Language book, you'll read the following:
 
-It’s a thought experiment, science fiction, a mental preparation for a pull request on the language & the standard library that I’d love to file once Swift is open sourced. (Help wanted!) I am not a programming language designer; the following might make sense to a varying degree.
+> The compiler is optimized for performance, and the language is optimized for development, without compromising on either. It’s designed to scale from “hello, world” to an entire operating system.
+>
+> [link](https://developer.apple.com/library/ios/documentation/Swift/Conceptual/Swift_Programming_Language/index.html#//apple_ref/doc/uid/TP40014097-CH3-ID0)
 
-This whole idea revolves around a new language keyword: `async`. It is a type qualifier, meaning that you can use it wherever you use a type. Add it to a type to indicate asynchronicity. Some examples:
+The reality however is that Swift will be mostly used for iOS and Mac app development. This will of course change when Swift is open sourced, but for the Apple platforms it will be the primary and (eventually) only language of choice.
+
+Wouldn't it be great if Swift made it easier to do some common tasks in modern app development. Things like networking and other asynchronous operations, user interface and interaction definitions and working with JSON. Swift has nothing that makes those tasks easier than when we were still writing Objective-C.
+
+Luckily, Swift is powerful enough to allow third-party developers to create frameworks that make the aforementioned tasks easier in a way that the solution is integrated nicely in the language. Some examples: [Carthography](https://github.com/robb/Cartography), [Few](https://github.com/joshaber/Few.swift), [Argo](https://github.com/thoughtbot/Argo), [ReactiveCocoa](https://github.com/ReactiveCocoa/ReactiveCocoa) and [BrightFutures](https://github.com/BrightFutures).
+
+In this post, I'd like to focus on the asynchronous operations: how third party frameworks are already improving this and how it could be incorporated in the Swift language design.
+
+# A Third-party Future
+
+I'm going to assume a basic understanding of [Futures](https://en.wikipedia.org/wiki/Futures_and_promises) and how they improve asynchronous programming. Consider the following example:
+
+{% highlight swift %}
+let string = fetchAnswer().map { ans in
+    return ans * 2
+}.map { timesTwo in
+    return "Answer times two is " + timesTwo
+}
+// string is a Future<String, E>
+{% endhighlight %}
+
+The constant `string` is a Future string, it is a placeholder of a string value that depends on the outcome of the asynchronous operator `fetchAnswer` and the manipulations that follow. If the answer returned from the server is '21', the resulting string will be 'Answer times two is 42'.
+
+While this is an improvement over the vanilla solution (i.e. completion handlers), it adds a lot of noise. For example, all changes are wrapped in `map` closures. We can do a little bit better, without having to change Swift itself. We can define an alternate version of the multiplication operator (`*`) that works on a Future int and a regular int and returns a Future int.
+
+{% highlight swift %}
+func *<E>(lhs: Future<Int, E>, rhs: Int) -> Future<Int, E> {
+    return lhs.map { l in
+        return l * rhs
+    }
+}
+{% endhighlight %}
+
+This would allow us to write the following:
+
+{% highlight swift %}
+let answerTimesTwo = fetchAnswer() * 2
+// answerTimesTwo is a Future<String, Error>
+{% endhighlight %}
+
+This removes any visual overhead that Futures have and leaves us with a seemingly boring multiplication between two regular ints. The second part, where the int is appended to a string using string interpolation is not possible without changes to the language.
+
+A few more examples of what would be feasible as a third-party Future library developer:
+
+{% highlight swift %}
+let str = stringAtUrl("http://example.com/helloworld")
+// str is a Future<String, Error>
+let lcStr = string.lowercaseString
+// lcStr is a Future<String, Error>
+let hasPr = "helloworld example".hasPrefix(lcString)
+// hasPr is a Future<Bool, Error>
+{% endhighlight %}
+
+On line 3, `lowercaseString` is called on a Future string. This is a standard library function on the String type that can be redefined on all Futures that contain a string. On line 5, a Future string is passed as the parameter to `hasPrefix`. This is again a standard library function that usually takes a regular String. We can add a *future proof* version to the String type using an extension. The necessary additions that make the code sample from above work are:
+
+{% highlight swift %}
+extension Future where Value == String {
+    var lowercaseString: Future<String, Value.Error> {
+        return map { s in
+            return s.lowercaseString
+        }
+    }
+}
+
+extension String {
+    func hasPrefix<E>(prefix: Future<String, E>) -> Future<Bool, E> {
+        return prefix.map { s in
+            return self.hasPrefix(s)
+        }
+    }
+}
+{% endhighlight %}
+
+While it would be possible to programmatically generate Future-compatible versions of all built-in operators and functions, I think we could go a lot further if the language and standard library would come with support for asynchronous values.
+
+For the remainder of this post, I'd like to think about what built-in support for asynchronous values would look like. Needless to say, anything beyond this point is merely a thought experiment, a mental preparation for a pull request that I'd love to file once Swift is open sourced. **It's Swift fan fiction.**
+
+# The async-type
+
+<!-- There's the concept 'optional' and there's the enum `Optional`. You're using both, but you often only see the first. You probably write `let a: Int?` and not `let a: Optional<Int>`. The latter reveals the implementation of the 'optional' concept. I'd like to argue that Futures can be the implementation of the 'asynchronous values' concept. -->
+
+Anything could be asynchronous, so it should be possible to mark anything as asynchronous. To see what the right approach for this would be, we can turn to the Swift grammar. The grammar is described and - to some extent - explained in the last chapter of the [Swift Programming Language](https://developer.apple.com/library/ios/documentation/Swift/Conceptual/Swift_Programming_Language/) book.
+
+[type rule](https://developer.apple.com/library/ios/documentation/Swift/Conceptual/Swift_Programming_Language/Types.html#//apple_ref/doc/uid/TP40014097-CH31-ID445):
+
+> *type* → *array-type \| dictionary-type \| function-type \| type-identifier \| tuple-type \| optional-type \| implicitly-unwrapped-optional-type \| protocol-composition-type \| metatype-type*
+
+The *type* rule describes that a type can consist of one of the following: an array type (`[Int]`), a dictionary type (`[Int:String]`), function type (`Int -> String`) etc. A particularly interesting option is the `optional-value`, which refers to the following rule:
+
+> *optional-type* → *type* **?**
+
+An optional type is a type followed by a question mark. *type* on the right side of the arrow refers to the rule above, so what you put in front of the question mark can be anything that is a type: an array, a dictionary and even another optional type. Turning it around: you can make any type optional by putting a question mark after it. That is exactly what we want for the asynchronous values: mark any type as asynchronous by putting `async` in front of it. This is described by the following rule:
+
+> *async-type* → **async** *type*
+
+This means you can have asynchronous arrays, functions, optionals and even recursive asynchronous types. When we then add *async-type* as one of the options on the right side of the arrow of the *type* rule, we can use `async` in all the appropriate places. The following then becomes valid Swift:
+
+{% highlight swift %}
+func stringAtUrl(url: String) -> async String { /* ... */ }
+
+let str: async String = stringAtUrl("http://example.com/helloworld")
+let lcStr: async String = string.lowercaseString
+{% endhighlight %}
+
+
+
+If Swift wouldn't have optionals, third-party frameworks would be able to provide an implementation that is almost as powerful as the built-in Optional that we've come to know an love. Only `if let` statements and passing non-optional values as parameters to a function that expect their optional counterparts require special treatment by the compiler.
+
+ENDING: There's the concept 'asynchronous values' and there's the class 'Future'. You'd be using both, but you often only see the first. You'd probably write 'let a: async Int' and not `let a: Future<Int, Error>`. The latter reveals the implementation of the 'asynchronous values' concept. The language can hide the implementation with syntactic sugar, enabling a great way to deal with the complexities of asynchronous development.
+
+
+
+
+
+
+
+<!-- This whole idea revolves around a new language keyword: `async`. It is a type qualifier, meaning that you can use it wherever you use a type. Add it to a type to indicate asynchronicity. Some examples:
 
 - `func fetch(url: String) -> async NSData`   
 	A function that performs an asynchronous operation that will return a `NSData` instance
@@ -83,4 +200,6 @@ let birdsAndImages: async [(Bird, UIImage)] = zip(birds, images)
 when let birdsAndImages = birdsAndImages {
 		tableView.reload()
 }
-{% endhighlight %}
+{% endhighlight %} -->
+
+<!-- So what does it mean for something to be a *first-class citizen*? Future is a class and a class is a first-class citizen. That makes a Future a first-class citizen *by proxy*. Just like Optional, which is an enum and thus a first-class citizen. The language does however provide some syntactic sugar for working with optionals that seem to make them first*er*-class than Futures. -->
