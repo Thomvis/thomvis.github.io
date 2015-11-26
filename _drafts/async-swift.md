@@ -129,6 +129,6 @@ The `when let` statement pauses the execution of the current scope until the asy
 
 To check if an asynchronous value has already been resolved, optional*esque* syntax could be used: `if let image = asyncImage { ... }`, `asyncImage?.size` as well as force unwrapping an asynchronous value using an exclamation mark, risking a runtime exception if the value is not yet there.
 
-The prospect of an open(er) Swift with the (faint) possibility of being able to file a pull request for this really excites me. Of course, there's a long way to go from a blog post to an actual working language feature. It will be so much harder and so much more more nuanced than what I've described so far. It's been an amusing thought experiment and I'd love to learn how far fetched it is.
+The prospect of an open(er) Swift with the (faint) possibility of being able to file a pull request for this really excites me. Of course, there's a long way to go from a blog post to an actual working language feature. It will be so much harder and so much more nuanced than what I've described so far. It's been an amusing thought experiment though and I'd love to learn how far fetched it is.
 
 *Thanks to [@nielsify](https://twitter.com/nielsify) and [@larslockefeer](https://twitter.com/larslockefeer) for providing feedback on a draft of this post.*
