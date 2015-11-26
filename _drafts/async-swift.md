@@ -3,17 +3,17 @@ layout: post
 title: "Asynchronous values as first-class citizens in Swift"
 ---
 
-Wouldn't it be great if Swift made it easier to do some common tasks in modern app development? Things like networking and other asynchronous operations, user interface and interaction definitions and working with JSON. Swift didn't necesarily make these things easier, compared to Objective-C.
+Wouldn't it be great if Swift made some common tasks in modern app development easier? Things like networking and other asynchronous operations, user interface and interaction definitions and working with JSON. Swift hasn't necesarily made these things easier, compared to Objective-C.
 
 Luckily, Swift is powerful enough to allow third-party developers to create frameworks that make the aforementioned tasks easier in a way that integrates nicely with the language and the standard library. Some examples: [Carthography](https://github.com/robb/Cartography), [Few](https://github.com/joshaber/Few.swift), [Argo](https://github.com/thoughtbot/Argo) and [ReactiveCocoa](https://github.com/ReactiveCocoa/ReactiveCocoa).
 
-In this post, I'll take a look at asynchronous operations. I specifically like a particular approach towards this: Futures. I like them so much that I've writtin my own implementation ([BrightFutures](https://github.com/BrightFutures)) and recently gave a [talk](http://www.thomasvisser.me/2015/11/08/swiftsummit-execution-context/) on the subject at SwiftSummit. At that conference, I was also on a panel that discussed the impending open sourcing of Swift. This post combines these two ideas into a story that begins with how  third party libraries improve asynchronous programming and what more can they do without changes in the language. The second part of the post is how I imagine built-in support for asynchronous values could look like.
+In this post, I'll take a look at asynchronous operations. I specifically like a particular approach towards this: Futures. I like them so much that I've written my own implementation ([BrightFutures](https://github.com/BrightFutures)) and recently gave a [talk](http://www.thomasvisser.me/2015/11/08/swiftsummit-execution-context/) on the subject at SwiftSummit. At the conference, I was also on a panel that discussed the impending open sourcing of Swift. This post combines those two topics into a story that begins with how  third party libraries are already improving asynchronous programming and what more can they do without needing changes in the language. The second part of the post is on how I imagine built-in support for asynchronous values using Futures could look like.
 
 # A Third-party Future
 
 I'm going to assume a basic understanding of what Futures are, but I'll provide the following short explanation, courtesy of the [Scala documentation](http://docs.scala-lang.org/overviews/core/futures.html):
 
-> Futures provide a way to reason about performing many operations in parallel– in an efficient and non-blocking way. A Future is a placeholder object for a value that may not yet exist. Generally, the value of the Future is supplied concurrently and can subsequently be used. Composing concurrent tasks in this way tends to result in faster, asynchronous, non-blocking parallel code.
+> A Future is a placeholder object for a value that may not yet exist. Generally, the value of the Future is supplied concurrently and can subsequently be used. Composing concurrent tasks in this way tends to result in faster, asynchronous, non-blocking parallel code.
 
 Consider the following example:
 
@@ -28,9 +28,11 @@ let image = fetchImageBaseUrlForItem(item).map  { baseUrl in
 // img is a Future<UIImage, E>
 {% endhighlight %}
 
-You've probably written quite a lot of code that does something similar to this: retrieve an url to an image from the network, add dimensions to the image url, fetch the image and flip it for RTL languages. `fetchImageBasedUrlForItem` returns a `Future<String,E>`, a *future string*, a placeholder for a value that we're waiting for to arrive over the network. Meanwhile we can schedule the operations that will happen as soon as the string value comes in. The chain of operations as a whole returns a Future that represents the result of the final step, an image.
+You've probably written quite a lot of code that does something similar to this: retrieve an url to an image from the network, add dimensions to the image url, fetch the image and flip it for RTL languages. `fetchImageBasedUrlForItem` returns a `Future<String,E>`, a *future string*, a placeholder for a value that we're waiting for to arrive over the network. Meanwhile we can describe the operations that will happen as soon as the value comes in. The chain of operations as a whole returns a Future that represents the result of the final step.
 
-This is the kind of code you can write today with the help of BrightFutures. While it is an improvement over the vanilla solution (i.e. completion handlers, which tend to lead to code that looks like a [pyramid](https://github.com/Thomvis/SFSwiftSummit2015/blob/9f38ae6fa65b31540f2b1ebd110965c51bb38690/SwiftSummit/DataSource.swift#L39-L59)), it adds a lot of noise. All changes are wrapped in `map` closures. We can do a bit better, even without having to change Swift itself. We can define an alternate version of the append operator (`+`) that works on a Future string and a regular string and returns a Future string:
+This is the kind of code you can write today with the help of BrightFutures. While it is an improvement over the vanilla solution (i.e. completion handlers, which tend to lead to code that looks like a [pyramid](https://github.com/Thomvis/SFSwiftSummit2015/blob/9f38ae6fa65b31540f2b1ebd110965c51bb38690/SwiftSummit/DataSource.swift#L39-L59)), it also adds some noise. All changes are wrapped in `map` closures. 
+
+We can do a bit better, even without having to change Swift itself. We can define an alternate version of the append operator (`+`) that works on a Future string and a regular string and returns a Future string:
 
 {% highlight swift %}
 func +<E>(lhs: Future<String, E>, rhs: String) -> Future<String, E> {
