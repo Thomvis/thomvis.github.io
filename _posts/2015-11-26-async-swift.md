@@ -127,7 +127,7 @@ when let image = asyncImage else {
 imageView.image = image
 {% endhighlight %}
 
-The `when let` statement pauses the execution of the current scope until the asynchronous string value has been resolved (i.e. fetched from the network). If the operation failed, the `else` clause is executed. If successful, the execution will continue with a regular UIImage value in `image`. While the execution is paused, control is returned to the previous frame on the stack. The return type of the scope that contains the `when let` statement has to be marked `async`. If it does not have a return type, it has to be marked as `async Void`.
+The `when let` statement pauses the execution of the current scope until the asynchronous image has been downloaded. If the operation failed, the `else` clause is executed. If successful, the execution will continue with a regular UIImage value in `image`. While the execution is paused, control is returned to the previous frame on the stack. The return type of the scope that contains the `when let` statement has to be marked `async`. If it does not have a return type, it has to be marked as `async Void`.
 
 To check if an asynchronous value has already been resolved, optional*esque* syntax could be used: `if let image = asyncImage { ... }`, `asyncImage?.size` as well as force unwrapping an asynchronous value using an exclamation mark, risking a runtime exception if the value is not yet there.
 
