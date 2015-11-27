@@ -3,11 +3,11 @@ layout: post
 title: "Asynchronous values as first-class citizens in Swift"
 ---
 
-Wouldn't it be great if Swift made some common tasks in modern app development easier? Things like networking and other asynchronous operations, user interface and interaction definitions and working with JSON. Swift hasn't necesarily made these things easier, compared to Objective-C.
+Wouldn't it be great if Swift made some common tasks in modern app development easier? Things like networking and other asynchronous operations, user interface and interaction definitions and working with JSON. Swift hasn't necessarily made these things easier, compared to Objective-C.
 
 Luckily, Swift is powerful enough to allow third-party developers to create frameworks that make the aforementioned tasks easier in a way that integrates nicely with the language and the standard library. Some examples: [Carthography](https://github.com/robb/Cartography), [Few](https://github.com/joshaber/Few.swift), [Argo](https://github.com/thoughtbot/Argo) and [ReactiveCocoa](https://github.com/ReactiveCocoa/ReactiveCocoa).
 
-In this post, I'll take a look at asynchronous operations. I specifically like a particular approach towards this: Futures. I like them so much that I've written my own implementation ([BrightFutures](https://github.com/BrightFutures)) and recently gave a [talk](/2015/11/08/swiftsummit-execution-context/) on the subject at SwiftSummit. At the conference, I was also on a panel that discussed the impending open sourcing of Swift. This post combines those two topics into a story that begins with how  third party libraries are already improving asynchronous programming and what more can they do without needing changes in the language. The second part of the post is on how I imagine built-in support for asynchronous values using Futures could look like.
+In this post, I'll take a look at asynchronous operations. I specifically like a particular approach towards this: Futures. I like them so much that I've written my own implementation ([BrightFutures](https://github.com/BrightFutures)) and recently gave a [talk](/2015/11/08/swiftsummit-execution-context/) on the subject at SwiftSummit. At the conference, I was also on a panel that discussed the impending open sourcing of Swift. This post combines those two topics into a story that begins with how third party libraries are already improving asynchronous programming and what more they can do without needing changes in the language. The second part of the post is on how I imagine built-in support for asynchronous values using Futures could look like.
 
 # A Third-party Future
 
@@ -20,7 +20,7 @@ Consider the following example:
 {% highlight swift %}
 let image = fetchImageBaseUrlForItem(item).map  { baseUrl in
     return url + "?w=1920&h=1080"
-}.map { url in
+}.flatMap { url in
     return session.fetchImage(url)
 }.map { img in
     return img.imageFlippedForRightToLeftLayoutDirection()
