@@ -113,7 +113,7 @@ The compiler would be able to automatically generate a `dataTaskWithURL(_:)` tha
 
 By passing the async data into the UIImage initialiser, the initialiser becomes asynchronous as well. This could happen automatically as you pass asynchronous values to methods that expect their synchronous counterparts.
 
-Another source for asynchronous values is a threading/scheduling mechanism like Grand Central Dispatch. Consider the following example of an asynchronous function that takes an image and preforms the expensive blur operation on the global queue:
+Another source for asynchronous values is a threading/scheduling mechanism like Grand Central Dispatch. Consider the following example of an asynchronous function that takes an image and performs the expensive blur operation on the global queue:
 
 {% highlight swift %}
 func blurImage(image: UIImage, radius: Int) -> async UIImage {
@@ -159,7 +159,7 @@ imageView.image = image
 
 The `when let` statement pauses the execution of the current scope until the asynchronous image has been downloaded. If the operation failed, the `else` clause is executed. If successful, the execution will continue with a regular UIImage value in `image`. While the execution is paused, control is returned to the previous frame on the stack. The return type of the scope that contains the `when let` statement has to be marked `async`. If it does not have a return type, it has to be marked as `async Void`.
 
-To check if an asynchronous value has already been resolved, optional*esque* syntax could be used: `if let image = asyncImage { ... }`, `asyncImage?.size` as well as force unwrapping an asynchronous value using an exclamation mark, risking a runtime exception if the value is not yet there.
+To check if an asynchronous value has already been resolved, *optionalesque* syntax could be used: `if let image = asyncImage { ... }`, `asyncImage?.size` as well as force unwrapping an asynchronous value using an exclamation mark, risking a runtime exception if the value is not yet there.
 
 The prospect of an open(er) Swift with the (faint) possibility of being able to file a pull request for this really excites me. Of course, there's a long way to go from a blog post to an actual working language feature. It will be so much harder and so much more nuanced than what I've described so far. It's been an amusing thought experiment though and I'd love to learn what it would take to make this reality.
 
