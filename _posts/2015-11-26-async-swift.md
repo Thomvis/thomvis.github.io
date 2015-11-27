@@ -86,7 +86,7 @@ let image = session.fetchImage(url)
 
 While it would be possible to programmatically generate Future-compatible versions of all built-in operators and functions, I think we could go a lot further if the language would have support for asynchronous values.
 
-For the remainder of this post, I'd like to think about what built-in support for asynchronous values would look like. Needless to say, anything beyond this point is merely a thought experiment, a mental preparation for a pull request that I'd love to file once Swift is open sourced. **It's Swift fan fiction.**
+For the remainder of this post, I'd like to think about what built-in support for asynchronous values would look like. Needless to say, anything beyond this point is merely a thought experiment, a mental preparation for a pull request that I'd love to file once Swift is open sourced. It's Swift fan fiction.
 
 # In a Swift version far far away...
 
@@ -96,7 +96,7 @@ There's the `Optional` enum, but you hardly ever use it directly. At the same ti
 
 Let's imagine what this would look like.
 
-Firstly we need a way to mark a type as asynchronous, like the question mark for optionals. Let's use the `async` keyword and allow it to be put in front of a type. If it is used in the return type of a function, the function becomes an asynchronous operation. Any functions called on an `async` type also become asynchronous operations.
+Firstly we need a way to mark a type as asynchronous, similar to how we use the question mark a type optional. Let's use the `async` keyword and allow it to be put in front of a type. If it is used in the return type of a function, the function becomes an asynchronous operation. Any functions called on an `async` type also become asynchronous operations.
 
 In the context of the example that we've been using so far, let's look at how `fetchImage(_:)` can be implemented:
 
@@ -109,14 +109,44 @@ extension NSURLSession {
 }
 {% endhighlight %}
 
-The compiler would be able to automatically generate a `dataTaskWithURL(_:)` that returns an `(async NSData, async NSURLResponse)` tuple because it could automatically wrap the method with the same name that takes a `completionHandler` as the final parameter, similar to how NSError inout parameters result in throwing functions.
+The compiler would be able to automatically generate a `dataTaskWithURL(_:)` that returns an `(async NSData, async NSURLResponse)` tuple because it could automatically wrap the [method](https://developer.apple.com/library/ios/documentation/Foundation/Reference/NSURLSession_class/#//apple_ref/occ/instm/NSURLSession/dataTaskWithURL:completionHandler:) with the same name that takes a `completionHandler` parameter, similar to how NSError inout parameters are converted to throwing functions.
 
 By passing the async data into the UIImage initialiser, the initialiser becomes asynchronous as well. This could happen automatically as you pass asynchronous values to methods that expect their synchronous counterparts.
 
-For a lot of functions, operators included, the compiler could just generate asynchronous variants on the fly. For other situations, e.g. when there's IO involved, there should be a way to turn an asynchronous type into a regular type:
+Another source for asynchronous values is a threading/scheduling mechanism like Grand Central Dispatch. Consider the following example of an asynchronous function that takes an image and preforms the expensive blur operation on the global queue:
 
 {% highlight swift %}
+func blurImage(image: UIImage, radius: Int) -> async UIImage {
 
+    var blurredImage: async UIImage
+    dispatch_async(globalQueue) {
+        blurredImage = // expensive blur operation
+    }
+
+    return blurredImage
+}
+{% endhighlight %}
+
+We're defining an asynchronous value in the function scope, before dispatching to the global queue. While the image is being blurred, the async UIImage is returned to the caller. When the blur operation is done, the image is set and becomes available through the returned async value.
+
+To substantiate my argument that this approach is at least somewhat feasible, let's have a look at how similar this looks to code that uses Futures (and Promises, which produce Futures).
+
+{% highlight swift %}
+func blurImage(image: UIImage, radius: Int) -> Future<UIImage, E> {
+
+    var blurredImage = Promise<UIImage, E>()
+
+    dispatch_async(globalQueue) {
+        blurredImage.complete(/** blurred image **/)
+    }
+
+    return blurredImage.future
+}
+{% endhighlight %}
+
+For a lot of functions, operators included, the compiler could just generate asynchronous variants on the fly. For other situations, e.g. when there's IO involved, there should be a way to turn an asynchronous type into their synchronous counterparts:
+
+{% highlight swift %}
 let asyncImage = session.fetchImage(url)
                         .imageFlippedForRightToLeftLayoutDirection()
 
