@@ -25,7 +25,7 @@ let image = fetchImageBaseUrlForItem(item).map  { baseUrl in
 }.map { img in
     return img.imageFlippedForRightToLeftLayoutDirection()
 }
-// img is a Future<UIImage, E>
+// image is a Future<UIImage, E>
 {% endhighlight %}
 
 You've probably written quite a lot of code that does something similar to this: retrieve an url to an image from the network, add dimensions to the image url, fetch the image and flip it for RTL languages. `fetchImageBasedUrlForItem` returns a `Future<String,E>`, a *future string*, a placeholder for a value that we're waiting for to arrive over the network. Meanwhile we can describe the operations that will happen as soon as the value comes in. The chain of operations as a whole returns a Future that represents the result of the final step.
