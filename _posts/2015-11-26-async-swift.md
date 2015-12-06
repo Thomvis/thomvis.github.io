@@ -3,6 +3,10 @@ layout: post
 title: "Asynchronous values as first-class citizens in Swift"
 ---
 
+**Update (December 6, 2015):** Swift is now Open Source. I wrote a [follow up post](/2015/12/06/async-swift-open-source/).
+
+---
+
 Wouldn't it be great if Swift made some common tasks in modern app development easier? Things like networking and other asynchronous operations, user interface and interaction definitions and working with JSON. Swift hasn't necessarily made these things easier, compared to Objective-C.
 
 Luckily, Swift is powerful enough to allow third-party developers to create frameworks that make the aforementioned tasks easier in a way that integrates nicely with the language and the standard library. Some examples: [Carthography](https://github.com/robb/Cartography), [Few](https://github.com/joshaber/Few.swift), [Argo](https://github.com/thoughtbot/Argo) and [ReactiveCocoa](https://github.com/ReactiveCocoa/ReactiveCocoa).
