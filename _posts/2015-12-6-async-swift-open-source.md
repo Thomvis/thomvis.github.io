@@ -5,7 +5,7 @@ title: "Open Source Swift: Asynchronous values revisited"
 
 Ten days ago, I wrote a post about [asynchronous values as first-class citizens in Swift](/2015/11/26/async-swift/). Something happened between then and now. Something big, something great: Swift was Open Sourced!
 
-This obviously puts the contents of my previous post in a different light. There's so much to see, read and learn now everything is in the open. A lot of questions were answered, including the questions I ended the post with:
+This obviously puts the contents of my previous post in a different light. There's so much to see, read and learn now that everything is in the open. A lot of questions were answered, including the questions I ended the post with:
 
 > The prospect of an open(er) Swift with the (faint) possibility of being able to file a pull request for this really excites me. Of course, there's a long way to go from a blog post to an actual working language feature. It will be so much harder and so much more nuanced than what I've described so far. It's been an amusing thought experiment though and I'd love to learn what it would take to make this reality.
 
