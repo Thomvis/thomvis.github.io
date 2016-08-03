@@ -37,7 +37,7 @@ func data() -> Observable<DataState<String>> {
 
 The asynchronous content is represented by the `source` Observable in this example. Let's assume it will return one string after an undetermined amount of time. The `data()` function returns an Observable that will emit one of the following:
 
-- a `.Done` item if it arrives within 0.05 seconds
+- a `.Done` item if data arrived within 0.05 seconds
 - a `.Loading` item after 0.05 seconds, followed by a `.Done` item after at least 1 second
 
 In the code, you can see that I'm creating two Observables, one for each of the scenarios above. `data` is a direct mapping of the source, immediately emitting `.Done` items for every item the source emits. `loadingThenData` is the result of two Observables that are being concatenated: the first one is an Observable that emits `.Loading` after 0.05 seconds, the second is identical to `data`, but with a subscription delay of 1 second. This ensures there will always be at least one second between `.Loading` and `.Data`.
