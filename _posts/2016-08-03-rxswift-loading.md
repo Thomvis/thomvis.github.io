@@ -9,7 +9,7 @@ As of late, we've started writing new features for [Highstreet](http://www.highs
 
 Let me set the scene: imagine a view that displays content that has to be loaded from the network. We'll start loading the content in `viewWillAppear` and present it as soon as it's there. The result? A view that shows the data as soon as possible, but might flicker on appearance depending on network latency.
 
-If we want to do better, we could try to do something like this: if the data is ready (almost) immediately, we show the data right away. If the data is not ready, we show a loading indicator. And when we show the loading indicator, we want to show it for at least a second before we display any data, to make sure that doesn't cause a flicker either.
+If we want to do better, we could try to do something like this: if the data is ready (almost) immediately (e.g. from cache), we show the data right away. If the data is not ready, we show a loading indicator. And when we show the loading indicator, we want to show it for at least a second before we display any data, to make sure that doesn't cause a flicker either.
 
 A solution without RxSwift would typically involve a timer, some instance variables to store the state and logic that is spread out across at least two methods. I think we can do a lot better with Rx:
 
