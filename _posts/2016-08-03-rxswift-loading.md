@@ -13,7 +13,7 @@ If we want to do better, we could try to do something like this: if the data is 
 
 A solution without RxSwift would typically involve a timer, some instance variables to store the state and logic that is spread out across at least two methods. I think we can do a lot better with Rx:
 
-{% highlight swift %}
+```swift
 enum DataState<E> {
     case Loading
     case Done(E)
@@ -33,7 +33,7 @@ func data() -> Observable<DataState<String>> {
     
     return [data, loadingThenData].amb()
 }
-{% endhighlight %}
+```
 
 The asynchronous content is represented by the `source` Observable in this example. Let's assume it will return one string after an undetermined amount of time. The `data()` function returns an Observable that will emit one of the following:
 
