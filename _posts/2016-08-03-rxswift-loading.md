@@ -48,4 +48,4 @@ There's one caveat: the code above assumes that `source` has shared side-effects
 
 The takeaway of this post, I hope, is that RxSwift can help you write an elegant solution to a problem that otherwise would have consisted out of several moving parts. All logic is contained to this one function, all state is tied to the lifecycle of a subscription.
 
-If only it didn't take a few weeks until I finally understood what a subscription was ;)
+If only it hadn't taken me a few weeks until I finally understood what a subscription was ;)
