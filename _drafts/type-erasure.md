@@ -1,7 +1,16 @@
 ---
 layout: post
-title: "Type erasure as a workaround"
+title: "A tale of two type erasures"
 ---
+
+At university, I learned about type erasure. It meant that generics in Java did not exist on runtime.
+
+When the community started learning Swift, I learned about another thing called type erasure.
+
+Those two type erasures turned out to be one thing.
+
+
+I got to know type erasure as a bad thing. At the time, I was learning to program in Java and type erasure was the reason why we .
 
 [A lot](http://robnapier.net/erasure) [has been written](https://realm.io/news/type-erased-wrappers-in-swift/) about type-erasure in Swift. From reading those posts, I got the feeling that the technique was primarily presented as a feature, something cool you can do with Swift. While this is true for some cases, I got to know type erasure first as a limitation and now as a workaround for limitations of Swift. In this post, I'd like to provide some additional context to the type erasure technique both as something that is useful and necessary evil.
 
