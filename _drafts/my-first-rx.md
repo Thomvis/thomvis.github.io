@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "My First Rx Library"
+title: "Reactive programming from scratch"
 ---
 
 Let's write a minimal Reactive program. From scratch. Let's reinvent a very tiny wheel, for the purpose of really understanding. When there're so few lines of code, there's not much to be explained. It's all there, at a glance.
