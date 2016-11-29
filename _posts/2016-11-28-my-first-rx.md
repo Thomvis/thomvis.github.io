@@ -20,7 +20,7 @@ let o = Observable<Int> { observer in
 }
 ```
 
-To work with the contents of an Observable, you needs to subscribe to it. When subscribing, you pass in a closure (the Observer) that is called for each event:
+To work with the contents of an Observable, you need to subscribe to it. When subscribing, you pass in a closure (the Observer) that is called for each event:
 
 ```swift
 o.subscribe { e in
@@ -88,7 +88,7 @@ When an Observer subscribes to the returned Observable, the request is initiated
 
 The examples so far show that Observables can be applied in various use cases, ranging from simple sequences, like the one at the top of this post, all the way up to complex and asynchronous operations, like network requests. They can also simplify working with UI events or continuous model changes.
 
-There are numerous ways to extend the simple Observable type we created above to make it more useful. Let's first look at a way to simplify the conversion from a plain arrays to an Observable:
+There are numerous ways to extend the simple Observable type we created above to make it more useful. Let's first look at a way to simplify the conversion from a plain array to an Observable:
 
 ```swift
 extension Observable {
@@ -140,7 +140,7 @@ When an Observer subscribes to the returned Observable, it in turn subscribes to
 
 In the example above, an Observable containing integers is _mapped_ to an Observable with booleans. True is emitted for each even number and false otherwise.
 
-For the finale of this post, we will look at how perform any number of network requests (two in this case) and create a single Observable containing their responses.
+For the finale of this post, we will look at how to perform any number of network requests (two in this case) and create a single Observable containing their responses.
 
 ```swift
 let urls = ["http://www.thomvis.nl", "http://www.thomasvisser.me"]
