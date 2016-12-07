@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "MVVM Rx"
+title: "Reactive MVVM"
 ---
 
 - introduction: rx and mvvm are a good fit
@@ -10,6 +10,10 @@ title: "MVVM Rx"
     - view: subscribes to and creates observables
 
 This approach to reactive view models was developed at [Highstreet mobile retail](http://www.highstreetapp.com).
+
+Creating and using a view model is usually a three step process: 1) initialize the view model, 2) bind the view model to the view inputs and 3) bind the view to the view model outputs. Depending on your approach, these steps could take place at different points in time or code. To accomodate the intermediate states where part of the view or view model are not yet set-up completely, you will end up using optionals or Subjects. The latter is a concept in Reactive programming that is tempting to use as an optional Observable. I wanted to find an approach that didn't require unwrapping optionals or dealing with Subjects all the time.
+
+
 
 ```swift
 // LoginViewModel.swift
@@ -29,20 +33,16 @@ The Model is the model in the traditional sense and/or a representation of the (
 
 Bindings are the parts of the view that the view model needs to know about. Examples are button taps, scroll events and form field contents.
 
-
-
-You'll end up with lots of optionals: an optional `viewModel` in the view controller and optional properties (or Subjects) in the view model where the bindings with the view go. With every optional comes the decision of what to do if it is nil. Subjects should not be used when Observables suffice.
-
 Here are several candidates for where to create the view model:
 
 - the View Controller's `init`: the view does not yet exist at this point, so this won't work.
 - the View Controller's `viewDidLoad`: the view is here, nice and fresh, but the dependencies and model are in 'way too deep'. I don't want the view (controller) to know about the dependencies and the model.
 - the creator of the View Controller: this might be a parent view model. The view definately does not yet exist at this point.
 
-Neither of these candidates seem suitable. The ingredients seem to become available in two steps: first the dependencies and the model, then the bindings. We don't want to get rid of the ViewModel initializer that takes all three ingredients, because we'll get optionals and Subjects in return. Instead, let's wrap our view model in a type that represents the two states it can be in: either detached (with just the dependencies and the model) or attached (all three, i.e. the full view model).
+None of these candidates seem suitable. The ingredients seem to become available in two steps: first the dependencies and the model, then the bindings. We don't want to get rid of the ViewModel initializer that takes all three ingredients, because we'll get optionals and Subjects in return. Instead, let's wrap our view model in a type that represents the two states it can be in: either detached (with just the dependencies and the model) or attached (all three, i.e. the full view model).
 
 ```swift
-// LoginViewModel.swift
+// Attachable.swift
 
 public enum Attachable<VM: ViewModel> {
     
@@ -189,8 +189,5 @@ public class LoginView: UIView {
 }
 ```
 
-Advanced:
+This approach to view models also enables some more advanced patterns. For example, in the case of a collection view you might want to detach and attach a single view model to different views as they are being reused. In other situations, you might want to use part of the view model logic before it is attached to a view. You could write that logic in a conditional extension on Attachable to achieve that. I might get back to these topics in a future post.
 
-- rebinding vm's
-- navigation between view models
-- writing part of the VM's logic in an extension of Attachable to be able to use the VM before it is attached.
