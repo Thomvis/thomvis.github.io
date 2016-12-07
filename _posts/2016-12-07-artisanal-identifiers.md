@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "Handcrafted artisanal random identifiers"
+title: "Hand-crafted artisanal random identifiers"
 ---
 
 How do you make sure related code in different places is kept in sync?
