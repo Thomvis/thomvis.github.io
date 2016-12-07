@@ -24,6 +24,6 @@ Searching for it in the project looks like this:
 
 ![Xcode search panel](/media/artisanal-identifiers-search.png)
 
-There are multiple ways you can create those identifiers (i.e. identifier creation strategies), but I prefer handmade artisanal random identifiers. These are created by mashing buttons on your keyboard until a reasonably sized, random looking string has appeared at your cursor. The chances of coming up with the same identifier twice are... very small. (Let's leave the exact calculations to another post.)
+There are multiple ways you can create those identifiers (i.e. identifier creation strategies), but I prefer handmade artisanal random identifiers. These are created by mashing buttons on your keyboard until a reasonably sized, random looking string has appeared at your cursor. The chances of coming up with the same identifier twice are... very small. Let's leave the exact calculations to another post. Also take care not to [end up](https://en.wikipedia.org/wiki/Infinite_monkey_theorem) with the complete works of William Shakespeare.
 
 I'm not sure if this is quite brilliant or very stupid, so do let me know.
