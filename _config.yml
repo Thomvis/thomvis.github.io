@@ -9,7 +9,7 @@ tagline:             Colorless green ideas sleep Swiftly
 description:         
 url:                 http://www.thomasvisser.me
 baseurl:             
-paginate:            5
+paginate:            100
 
 # About/contact
 author:
