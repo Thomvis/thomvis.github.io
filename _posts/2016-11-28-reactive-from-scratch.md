@@ -197,12 +197,12 @@ Inside `flatten`, we subscribe to each inner Observable as it is emitted by the 
 Putting everything together, here's the final example of how to use Reactive programming for fetching multiple URLs and dealing with their responses as they come in. It doesn't look like much, and that's a good thing.
 
 ```swift
-Observable(elements: [
+flatten(Observable(elements: [
     "http://www.thomvis.nl", 
     "http://www.thomasvisser.me"
 ]).map { 
     session.response(url: URL(string: $0)!) 
-}.flatten().subscribe { e in
+}).subscribe { e in
     // e is two .next events with the responses from the requested URLs
     // followed by a .completed
 }
