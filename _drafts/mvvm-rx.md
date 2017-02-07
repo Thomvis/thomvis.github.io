@@ -3,22 +3,83 @@ layout: post
 title: "Reactive MVVM"
 ---
 
-RxSwift is a great tool for building your MVVM architecture. The three components of MVVM map nicely to concepts from RxSwift. The model layer is where Observables are created, the view model combines and transforms Observables and the view Observes the result. There's no one right way to use RxSwift or implement MVVM. However, the details of your implementation and the boundaries you draw determine how concise and testable your code will be.
+There are many ways to implement MVVM or to put RxSwift to use, let alone combine the two. It comes down to 
 
-In this post, I'll discuss an approach to _Reactive MVVM_ that I developed at [Highstreet mobile retail](http://www.highstreetapp.com). It has served us well over the past year and I hope you'll find it equally helpful. The approach involves a tiny bit of shared 'library' code, describing a common interface for view models, which should provide guidence to setting the right boundaries and creating a clear separation of concerns.
-
-Creating and using a view model is usually a three step process: 
-
-1. initialize the view model 
-2. bind the view model to the view inputs
-3. bind the view to the view model outputs
-
-Depending on your approach, these steps could take place at different points in time or code. To accomodate the intermediate states where part of the view or view model are not yet set-up completely, you will end up using optionals or Subjects. The latter is a concept in Reactive programming that is tempting to use as an optional Observable. I wanted to find an approach that didn't require unwrapping optionals or dealing with Subjects all the time.
 
 ```swift
-// LoginViewModel.swift
+// 1. initialize the view model with dependencies & model
+let vm = ViewModel(apiClient: apiClient, database: database, model: model)
 
-public protocol ViewModel {
+// 2. provide the view model with inputs from the view
+vm.setInputs(button.rx.tap, usernameField.rx.text)
+
+// 3. subscribe the view to the outputs from the view model
+vm.buttonEnabled().subscribe(onNext: {
+    button.setEnabled($0)
+}).addDisposableTo(bag)
+```
+
+You probably won't (want to) find these lines of code so close together in a serious code base. It presumes a single context where the app's infrastructure, models and view are within reach. Such a context is likely to be tightly coupled to other parts of the app and will prove to be hard to test as well.
+
+A second issue with this approach is the implicit requirement on the order in which step 2 and 3 are executed. This becomes apparent as we look at a typical implementation of the view model:
+
+```swift
+class ViewModel {
+    var buttonTap: Observable<Void>!
+    var usernameText: Observable<String>!
+
+    // initializer omitted
+
+    func setInputs(tap: Observable<Void>, username: Observable<Void>) {
+        buttonTap = tap
+        usernameText = username
+    }
+
+    func buttonEnabled() -> Observable<Bool> {
+        return usernameText.map { $0 != nil }
+    }
+}
+```
+
+If the view subscribes to `buttonEnabled()` before `setInputs` is called, the app will crash. Making `usernameText` a regular Optional is not a solution, because then we have to handle the nil case in `buttonEnabled()` (e.g. by returning an empty Observable), which can only lead to unexpected behavior.
+
+Another solution is to make `usernameText` a [Subject](http://reactivex.io/documentation/subject.html). The Subject can be created at initialization and after that, the order in which `setInputs` and `buttonEnabled` are called doesn't really matter. The downside is however that you'll know have to manage a subscription on `username` in `setInputs` and deal with additional state that comes with a Subject. The latter being the reason why you might have heard that [Subjects should be avoided](http://introtorx.com/Content/v1.0.10621.0/18_UsageGuidelines.html). They definately have their use, but I think we can do better here.
+
+As we've been fiddling with Optionals and Subjects, we've been avoiding the real issue here: we're dealing with an object that has a transient and inherently uncomfortable state. The use of multiple Optionals at a single level are a symptom of this. A solution can be to look one level up.
+
+We can get rid of the optionals by refactoring ViewModel to have an initializer that receives all required dependencies: infrastructure, model and view inputs:
+
+```swift
+class ViewModel {
+    let buttonTap: Observable<Void>
+    let usernameText: Observable<String>
+
+    init(apiClient: APIClient, database: DB, model: Model, tap: Observable<Void>, username: Observable<String>) {
+        buttonTap = tap
+        usernameText = username
+    }
+
+    func buttonEnabled() -> Observable<Bool> {
+        return usernameText.map { $0 != nil }
+    }
+}
+```
+
+This has greatly simplified the inner workings of the ViewModel: all properties are constant, `setInputs` is gone and there's no (explicitly unwrapped) Optional in sight.
+
+But as we return to the code where the view model is initialized, we notice things took a turn for the worse. The three steps have been replaced by two (as step one and two are now combined) and a single context, a single line even, in which both the app's infrastructure and the view are accessible is now inevitable.
+
+```swift
+// 1. initialize the view model with dependencies, model & view
+let vm = ViewModel(apiClient: apiClient, database: database, model: model, tap: button.rx.tap, username usernameField.rx.text)
+```
+
+We can resolve this by reintroducing a way to represent the two states the view model can be in: the initial state where it is detached from the view and the state where it is all wired up.
+
+The power of the solution that we're looking for will come, in part, from the fact that it doesn't care (i.e. make no assuptions) on the inner workings of the view model. The solution can be generic. This does require us to quickly formalize what a view model looks like from the outside and how it can be initialized:
+
+```swift
+protocol ViewModelProtocol {
     associatedtype Dependencies
     associatedtype Model
     associatedtype Bindings
@@ -27,177 +88,73 @@ public protocol ViewModel {
 }
 ```
 
-Dependencies are other parts of the app this view model needs to know about. Examples are the networking layer, the parent view model and analytics trackers.
+The dependencies are parts of the app's infrastructure that are passed to each instance of that view model. The model contains data that is specific to that instance of the view model. The bindings define the ways the view model can observe the view, for as long as it is attached to that view.
 
-The Model is the model in the traditional sense and/or a representation of the (initial) view state.
-
-Bindings are the parts of the view that the view model needs to know about. Examples are button taps, scroll events and form field contents.
-
-Here are several candidates for where to create the view model:
-
-- the View Controller's `init`: the view does not yet exist at this point, so this won't work.
-- the View Controller's `viewDidLoad`: the view is here, nice and fresh, but the dependencies and model are in 'way too deep'. I don't want the view (controller) to know about the dependencies and the model.
-- the creator of the View Controller: this might be a parent view model. The view definately does not yet exist at this point.
-
-None of these candidates seem suitable. The ingredients seem to become available in two steps: first the dependencies and the model, then the bindings. We don't want to get rid of the ViewModel initializer that takes all three ingredients, because we'll get optionals and Subjects in return. Instead, let's wrap our view model in a type that represents the two states it can be in: either detached (with just the dependencies and the model) or attached (all three, i.e. the full view model).
+Making our view model conform to the protocol is quite straight forward:
 
 ```swift
-// Attachable.swift
+class ViewModel: ViewModelProtocol {
+ 
+    // properties & buttonEnabled() omitted
 
-public enum Attachable<VM: ViewModel> {
-    
-    case detached(VM.Dependencies, VM.Model)
-    case attached(VM)
-    
-    public mutating func bind(_ bindings: VM.Bindings) -> VM? {
-        if case let .detached(dependencies, model) = self {
-            let vm = VM(
-                dependencies: dependencies, 
-                model: model, 
-                bindings: bindings
-            )
-            self = .attached(vm)
-            return vm
-        }
-        return nil
-    }
-    
-    public var viewModel: VM? {
-        if case let .attached(vm) = self {
-            return vm
-        }
-        return nil
-    }
-}
-```
-
-A view model is created in detatched state, requiring only the dependencies and model. The detached view model is passed to the view (controller) and when the view is ready to be bound, the bindings are passed to the `bind` method. This method is mutating, because the Attachable changes from detached to attached. At the call site, this looks like this:
-
-Example:
-
-```swift
-var viewModel: Attachable<ExampleViewModel> = .detached(deps, model)
-if let vm = viewModel.bind(bindings) {
-    // vm is an ExampleViewModel
-}
-```
-
-`bind` returns the newly created view model instance as a convenience. It immediately be unwrapped and used. Typically, inside the `if let` body, subscriptions to the view model's outputs are set-up. 
-
-For the remainder of this post, we'll look at the interesting code that goes into creating a login form view. Simple enough, and also familiar if you've been reading other posts or books on Reactive programming. Here's a screenshot:
-
-![A login screen in the Scotch & Soda app](/media/login.png){:width="50%"}
-
-Let's begin by creating the view model. 
-
-```swift
-// LoginViewModel.swift
-
-public class LoginViewModel: ViewModel {
-    
-    let bindings: Bindings
-
-    init(dependencies: Dependencies, model: (), bindings: Bindings) {
-        self.bindings = bindings
+    init(dependencies: Dependencies, model: Model, bindings: Bindings) {
+        buttonTap = bindings.tap
+        usernameText = bindings.username
     }
 
     struct Dependencies {
-        let login: (String, String) -> Observable<Bool>
+        let apiClient: APIClient
+        let database: DB
     }
+
+    typealias Model = () // this VM has no model
 
     struct Bindings {
-        let usernameText: Observable<String>
-        let passwordText: Observable<String>
-        let buttonTaps: Observable<Void>
+        let tap: Observable<Void>
+        let username: Observable<String>
     }
-
 }
 ```
 
-The view model has one dependency. It is a function that takes two strings (the username and password) and returns an Observable, representing the asynchronous login process. Instead of passing in a function, we could also have passed a `UserSessionController`. By passing in a function, you prevent tight coupling and make the view model easier to test: it is easier to provide a test function than to mock a whole `UserSessionController`.
-
-For this example, we won't use a model, therefore we define it as Void. In a real-world case, the model could contain the initial contents of the form, e.g. to prefill a known username.
-
-The bindings consist of Observables representing the text in the two input fields and the clicks on the login button.
+We can now create a type that wraps around a view model to represent the two states it can be in:
 
 ```swift
-// LoginViewController.swift
-
-public class LoginViewController: UIViewController {
+enum Attachable<VM: ViewModelProtocol> {
     
-    var viewModel: Attachable<LoginViewModel>
-
-    public init(viewModel: Attachable<LoginViewModel>) {
-        self.viewModel = viewModel
-    }
-
-    public override func viewDidLoad() {
-        super.viewDidLoad()
-
-        let bindings = LoginViewModel.Bindings(
-            usernameText: Reactive(view.usernameTextField).text,
-            passwordText: Reactive(view.passwordTextField).text,
-            buttonTaps: Reactive(view.button).taps
-        )
-
-        if let vm = viewModel.bind(bindings) {
-            view.bind(to: vm)
+    case detached(VM.Dependencies, VM.Model)
+    case attached(VM.Dependencies, VM.Model, VM)
+    
+    mutating func bind(_ bindings: VM.Bindings) -> VM {
+        switch self {
+        case let .detached(deps, model), let .attached(deps, model, _):
+            let vm = VM(
+                dependencies: deps,
+                model: model,
+                bindings: bindings
+            )
+            self = .attached(deps, model, vm)
+            return vm
         }
     }
-}
-```
-
-```swift
-// LoginViewModel.swift, inside LoginViewModel
-
-let bag = DisposeBag()
-let form: Observable<(String, String)>
-
-init(dependencies: Dependencies, model: (), bindings: Bindings) {
-    self.bindings = bindings
-
-    self.form = Observable.combineLatest(
-        bindings.usernameText, 
-        bindings.passwordText
-    ) { ($0, $1) }.shareReplay(1)
-
-    let login = bindings.buttonTaps.withLatestFrom(form) { form in
-        dependencies.login(form.0, form.1)
-    }.concat()
-
-    login.subscribe().addDisposableTo(bag)
-}
-```
-
-- init is used to create observables that define inner working or represent intermediate results that might be used by multiple outputs, to prevent 'expensive' side-effects from happening twice
-- in this case we subscribe to the login observable, tying it to the lifecycle of the VM. in other cases it might make more sense to tie it to some external factor
-
-```swift
-// LoginViewModel.swift, inside LoginViewModel
-
-var buttonEnabled: Observable<Bool> {
-    return form.map { form in
-        return !form.0.isEmpty && !form.1.isEmpty
-    }
-}
-```
-
-```swift
-// LoginView.swift
-
-public class LoginView: UIView {
     
-    // textfield and button properties omitted
-    let bag = DisposeBag()
-
-    func bind(to viewModel: LoginViewModel) {
-        viewModel.buttonEnabled.subscribe(onNext: { [weak self] e in
-            self?.button.isEnabled = e
-        }).addDisposableTo(bag)
-    }
-
 }
 ```
 
-This approach to view models also enables some more advanced patterns. For example, in the case of a collection view you might want to detach and attach a single view model to different views as they are being reused. In other situations, you might want to use part of the view model logic before it is attached to a view. You could write that logic in a conditional extension on Attachable to achieve that. I might get back to these topics in a future post.
+Revisiting the initial example, we can now create a view model like so:
 
+```swift
+// 1. initialize the view model with dependencies & model
+let avm: Attachable<ViewModel> = .detached(dependencies, ())
+
+// 2. provide the view model with inputs from the view
+let vm = avm.bind(view.bindings)
+
+// 3. subscribe the view to the outputs from the view model
+vm.buttonEnabled().subscribe(onNext: {
+    button.setEnabled($0)
+}).addDisposableTo(bag)
+```
+
+We've reduced the state space significantly: the original approach with two Optionals had four possible states, while our final solution only has two. With more complex (realistic) view models, the original approach could easily yield dozens of states, while the final solution remains at a stable two states.
+
+<!-- , not unlike the process of untangling knitting yarn -->
