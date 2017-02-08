@@ -44,7 +44,15 @@ class ViewModel {
 }
 ```
 
-If the view subscribes to `buttonEnabled()` before `setInputs` is called, the app will crash. Making `usernameText` a regular Optional is not a solution, because then we have to handle the nil case in `buttonEnabled()` (e.g. by returning an empty Observable), which can only lead to unexpected behavior.
+If the view subscribes to `buttonEnabled()` before `setInputs` is called, the app will crash. Making `usernameText` a regular Optional is not a solution, because then we have to handle the nil case in `buttonEnabled()`, e.g. by returning an empty Observable:
+
+```swift
+func buttonEnabled() -> Observable<Bool> {
+    return usernameText?.map { $0 != nil } ?? Observable.empty()
+}
+```
+
+This leads to unexpected behavior for Observers that subscribe to `buttonEnabled()` before `setInputs` is called. They have in fact subscribed to an empty Observable and will never receive any items.
 
 Another solution is to make `usernameText` a [Subject](http://reactivex.io/documentation/subject.html). The Subject can be created when the view model is initialized and after that, the order in which `setInputs` and `buttonEnabled` are called doesn't really matter. The downside is however that you'll now have to manage a subscription on `username` in `setInputs` and deal with additional state that comes with a Subject. The latter being the reason why you might have heard that [Subjects should be avoided](http://introtorx.com/Content/v1.0.10621.0/18_UsageGuidelines.html). They definately have their use, but I think we can do better without them here.
 
@@ -160,7 +168,7 @@ vm.buttonEnabled().subscribe(onNext: {
 }).addDisposableTo(bag)
 ```
 
-At first glance, this last example appears to be very similar to the situation we started this post with. We have however achieved two important things: the inner workings of the view model have been simplified and the Attachable type guarantees correct usage of the view model from the outside. 
+At first glance, this last example appears to be very similar to the situation we started this post with. We have however achieved two important things: simplified inner workings of the view model  and an Attachable type guaranteeing correct usage of the view model from the outside.
 
 The presented approach is unobtrusive, it consists of just one protocol and an enum. It encourages flexibility by using composition, instead of requiring a superclass. It can also be extended to support more complex use cases, for example repeated attaching/detaching in the context of a collection view or using parts of the view model's logic before it has been attached through protocol extensions on Attachable.
 
