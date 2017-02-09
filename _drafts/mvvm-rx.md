@@ -22,7 +22,7 @@ vm.buttonEnabled().subscribe(onNext: {
 }).addDisposableTo(bag)
 ```
 
-You probably won't find, or want to find, these lines of code so close together in a serious code base. It presumes a single context where the app's infrastructure, models and view are within reach. Such a context is likely to be tightly coupled to other parts of the app and will prove to be hard to test.
+You probably won't find, or want to find, these lines of code so close together in a serious code base. It presumes a single context where the model, which can contain parts of your app's infrastructure, and view are within reach. Such a context is likely to be tightly coupled to other parts of the app and will prove to be harder to test.
 
 But as you move these lines apart, to their respective correct location within your app's architecture, a new issue arises. There's an implicit requirement on the order in which step 2 and 3 are executed. The reason why becomes apparent as we look at a typical implementation of the view model:
 
@@ -44,7 +44,7 @@ class ViewModel {
 }
 ```
 
-If the view subscribes to `buttonEnabled()` before `setInputs` is called, the app will crash. Making `usernameText` a regular optional is not a solution, because then we have to handle the nil case in `buttonEnabled()`, e.g. by returning an empty Observable:
+If the view invokes `buttonEnabled` before `setInputs` is called, the app will crash. Making `usernameText` a regular optional is not a solution, because then we have to handle the nil case in `buttonEnabled()`, e.g. by returning an empty Observable:
 
 ```swift
 func buttonEnabled() -> Observable<Bool> {
@@ -52,9 +52,9 @@ func buttonEnabled() -> Observable<Bool> {
 }
 ```
 
-This leads to unexpected behavior for Observers that subscribe to `buttonEnabled()` before `setInputs` is called. They have in fact subscribed to an empty Observable and will never receive any items.
+This leads to unexpected behavior for observers that subscribe to `buttonEnabled()` before `setInputs` is called. They have in fact subscribed to an empty observable and will never receive any items, even after `setInputs` has been called.
 
-Another solution is to make `usernameText` a [Subject](http://reactivex.io/documentation/subject.html). The subject can be created when the view model is initialized and after that, the order in which `setInputs` and `buttonEnabled` are called doesn't really matter. You'll now have to manage a subscription on `username` in `setInputs` and deal with additional state that comes with a subject though.
+Another solution is to make `usernameText` a [Subject](http://reactivex.io/documentation/subject.html). The subject can be created when the view model is initialized and after that, the order in which `setInputs` and `buttonEnabled` are called doesn't really matter. However, you'll now have to manage a subscription on `username` in `setInputs` and deal with additional state that comes with a subject.
 
 If you're new to Reactive programming, it might help to think of a subject as a mutable variable. This would make `usernameText` mutable, while it should be strictly read-only as far as the view model is concerned. This is the reason why you might have heard that [subjects should be avoided](http://introtorx.com/Content/v1.0.10621.0/18_UsageGuidelines.html). They definitely have their use, but I think we can do better without them here.
 
@@ -81,14 +81,14 @@ class ViewModel {
 
 This has greatly simplified the inner workings of the ViewModel: all properties are constant, `setInputs` is gone and there's no (explicitly unwrapped) optional in sight.
 
-As we return to the code where the view model is initialized, we notice things took a turn for the worse. The three steps from before have been replaced by two (as step one and two are now combined) and a single context, a single line even, in which both the model and the view have to be accessible is now inevitable:
+As we return to the code where the view model is initialized, we notice things took a turn for the worse. The three steps from before have been replaced by two (as step one and two are now combined) and a single context, a single line even, in which both model and view have to be accessible is now inevitable:
 
 ```swift
 // 1. initialize the view model with the model & view bindings
 let vm = ViewModel(model: model, tap: button.rx.tap, username: usernameField.rx.text)
 ```
 
-Ideally, we want to pass the view model to the view (controller), but now need the view to initialize the view model first. We can solve this chicken and egg situation by reintroducing a way to represent the two states of the view model: the initial state where it's detached from the view and the state where it's all wired up.
+Ideally, we want to initialize the view model outside of the view (controller), but we now need the view to initialize the view model first. We can solve this chicken and egg situation by reintroducing a way to represent the two states of the view model: the initial state where it's detached from the view and the state where it's all wired up.
 
 The power of the solution that we're looking for will come, in part, from the fact that it doesn't care (i.e. makes no assuptions) about the inner workings of the view model. This does require us to briefly formalize what a view model looks like from the outside and how it can be initialized:
 
