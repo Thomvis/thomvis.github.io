@@ -1,0 +1,52 @@
+==================================================================
+https://keybase.io/thomasvisser
+--------------------------------------------------------------------
+
+I hereby claim:
+
+  * I am an admin of http://www.thomasvisser.me
+  * I am thomasvisser (https://keybase.io/thomasvisser) on keybase.
+  * I have a public key ASDfX2lSMLKNkTnSiHoKQrJ2IKnp4d-pzYj_4ZtzjW834Ao
+
+To do so, I am signing this object:
+
+{
+    "body": {
+        "key": {
+            "eldest_kid": "01016b476e6bbcf426f49423e943fbd017ecbf44e48cc71a277d4401912174a0e6940a",
+            "host": "keybase.io",
+            "kid": "0120df5f695230b28d9139d2887a0a42b27620a9e9e1dfa9cd88ffe19b738d6f37e00a",
+            "uid": "6cb18fba05061ff438c318b25ec55f00",
+            "username": "thomasvisser"
+        },
+        "service": {
+            "hostname": "www.thomasvisser.me",
+            "protocol": "http:"
+        },
+        "type": "web_service_binding",
+        "version": 1
+    },
+    "client": {
+        "name": "keybase.io go client",
+        "version": "1.0.18"
+    },
+    "ctime": 1486633635,
+    "expire_in": 504576000,
+    "merkle_root": {
+        "ctime": 1486633622,
+        "hash": "9a07ba591dcc41e6df03dbaab81bd1fd9ec69b1a0394b20bf66c1d2dd7ec2224b774ce9654ec6d9e35eb16cb34bf64efd137a772521afba87d0767122eb16125",
+        "seqno": 855273
+    },
+    "prev": "5ec43dbff18a2d90a8fc27e314b04f1d2a6e295a1a5d25ef978af28189b3e146",
+    "seqno": 13,
+    "tag": "signature"
+}
+
+which yields the signature:
+
+hKRib2R5hqhkZXRhY2hlZMOpaGFzaF90eXBlCqNrZXnEIwEg319pUjCyjZE50oh6CkKydiCp6eHfqc2I/+Gbc41vN+AKp3BheWxvYWTFAv97ImJvZHkiOnsia2V5Ijp7ImVsZGVzdF9raWQiOiIwMTAxNmI0NzZlNmJiY2Y0MjZmNDk0MjNlOTQzZmJkMDE3ZWNiZjQ0ZTQ4Y2M3MWEyNzdkNDQwMTkxMjE3NGEwZTY5NDBhIiwiaG9zdCI6ImtleWJhc2UuaW8iLCJraWQiOiIwMTIwZGY1ZjY5NTIzMGIyOGQ5MTM5ZDI4ODdhMGE0MmIyNzYyMGE5ZTllMWRmYTljZDg4ZmZlMTliNzM4ZDZmMzdlMDBhIiwidWlkIjoiNmNiMThmYmEwNTA2MWZmNDM4YzMxOGIyNWVjNTVmMDAiLCJ1c2VybmFtZSI6InRob21hc3Zpc3NlciJ9LCJzZXJ2aWNlIjp7Imhvc3RuYW1lIjoid3d3LnRob21hc3Zpc3Nlci5tZSIsInByb3RvY29sIjoiaHR0cDoifSwidHlwZSI6IndlYl9zZXJ2aWNlX2JpbmRpbmciLCJ2ZXJzaW9uIjoxfSwiY2xpZW50Ijp7Im5hbWUiOiJrZXliYXNlLmlvIGdvIGNsaWVudCIsInZlcnNpb24iOiIxLjAuMTgifSwiY3RpbWUiOjE0ODY2MzM2MzUsImV4cGlyZV9pbiI6NTA0NTc2MDAwLCJtZXJrbGVfcm9vdCI6eyJjdGltZSI6MTQ4NjYzMzYyMiwiaGFzaCI6IjlhMDdiYTU5MWRjYzQxZTZkZjAzZGJhYWI4MWJkMWZkOWVjNjliMWEwMzk0YjIwYmY2NmMxZDJkZDdlYzIyMjRiNzc0Y2U5NjU0ZWM2ZDllMzVlYjE2Y2IzNGJmNjRlZmQxMzdhNzcyNTIxYWZiYTg3ZDA3NjcxMjJlYjE2MTI1Iiwic2Vxbm8iOjg1NTI3M30sInByZXYiOiI1ZWM0M2RiZmYxOGEyZDkwYThmYzI3ZTMxNGIwNGYxZDJhNmUyOTVhMWE1ZDI1ZWY5NzhhZjI4MTg5YjNlMTQ2Iiwic2Vxbm8iOjEzLCJ0YWciOiJzaWduYXR1cmUifaNzaWfEQI8njynina3GWPy46H8214KtwfEIoIo1NaHIoWvqmPc5Pec4Kb/HF0iq0scnC9bWZxk1cX7zIOkuKdrqcSSkJwaoc2lnX3R5cGUgpGhhc2iCpHR5cGUIpXZhbHVlxCCkvWHOi82pQ+ohPgHknOUTBfgxJdS4tXiyTm0ceUBjWqN0YWfNAgKndmVyc2lvbgE=
+
+And finally, I am proving ownership of this host by posting or
+appending to this document.
+
+View my publicly-auditable identity here: https://keybase.io/thomasvisser
