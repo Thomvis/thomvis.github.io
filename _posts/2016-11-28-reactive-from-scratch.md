@@ -3,7 +3,7 @@ layout: post
 title: "Reactive programming from scratch"
 ---
 
-Let's write a minimal Reactive program. From scratch. Let's reinvent a very tiny wheel, for the purpose of really understanding. When there're so few lines of code, there's not much to be explained. It's all there, at a glance.
+Let's write a minimal Reactive program. From scratch. Let's reinvent a very tiny wheel, for the purpose of really understanding. When there are so few lines of code, there's not much to be explained. It's all there, at a glance.
 
 <!-- The more lines you write, the bigger the chance you introduce something that is perceived as magic. And while there is no such thing as magic in programming, a collective of code could keep up the appearance of being magic. -->
 
