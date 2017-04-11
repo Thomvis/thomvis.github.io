@@ -5,25 +5,15 @@ title: "A Precursor to Reactive Programming"
 
 I started doing reactive programming 1.5 years ago. I could point to the exact day: a significant and conscious paradigm shift. At the same time, the switch to reactive programming was part of the constant drive to find better ways to write good code.
 
-`good code = principles x implementation`
+I feel like I can write better code using reactive programming. What 'good code' is, is of course subjective. We might not share the same principles, values or rules. And even if we do, we can debate about how well a certain piece of code implements those principles.
 
-`implementation = effort x tools x tool proficiency`
+It's useful to differentiate between principles and the means by which those principles are implemented. We can vary one of them, while keeping the other constant, and compare the resulting code. For this post, I want to pick a single principle and look at two possible implementations: imperative and reactive.
 
-`tools = Swift x RxSwift x MVVM x Xcode x ...`
+The principle that I want to focus on is that of side-effect isolation. Side-effects are changes to the state outside of the scope that makes the change. For example, a certain function could perform an API request, change state of a singleton, update a CoreData entity or change the UI as a side-effect.
 
-Was my first reactive code really better than the code I wrote before? To be honest, it hasn't aged incredibly well. Not as well as the imperative code I wrote before that. So why did I switch?e
+It is tempting to sprinkle side-effects all over your code, but it will make your code harder to understand and test. By isolating side-effects, you increase the predictability and flexibility of your code. I've tried, and achieved, that in imperative code and reactive programming.
 
-These principles change at a slower pace; it is a more fundamental proces fueled by knowledge, experience and inspiration. Simultaneously, we find new ways to implement those principles. We'll switch tools, programming paradigms and even languages, trying to implement the same principles, but in a better way. It's also fun to do and it inspires us to improve our principles.
-
-I want to give an example of one of those principles and how the implementation changed as I switched to reactive programming. Let's first look at a typical imperative implementation:
-
-As I got better at reactive programming, my code would to a greater degree reflect the principles of good code.
-
-That's how I feel I can currently write my best code. A big part of that is how reactive programming helps me separate data flow from side-effects. While easily mixed together, data flow and side-affects are best kept apart in code that is easy to understand and test.
-
-Looking back at the imperative code I wrote in the months before I started using reactive programming, I can now identify attempts to achieve that desired separation.
-
-Let's look at an example of that:
+To illustrate the issue, I will use simplified code from [a shopping app](https://www.highstreetapp.com). Imagine a detail screen where the user can choose between colors of a product and stock information about the availability of all colors is refreshed periodically. The state of the 'buy button' depends on the availability of the currently selected color.
 
 ```swift
 func stockChanged(_ stock: Stock) {
@@ -41,22 +31,32 @@ func evaluateBuyButtonState() {
 }
 ```
 
+This code achieves side-effect isolation to a certain extent. The code reads as two functions that process input and one that performs a side-effect. In practise, calling either `stockChanged` or `colorChanged` will trigger side-effects, because they directly call `evaluateBuyButtonState`.
 
+To achieve true isolation of side-effects and make the code better testable, the direct invocation of the evaluation function would need to be replaced by a delegate call or a callback closure. The added indirection would make it possible to replace the side-effect inducing code with a mock implementation during tests.
 
-Note that this is already a step up from a naïve implementation where no effort is made to separate data flow from side-effects. In that implementation, there would be no `evaluateBuyButtonState()` and the buy button would be updated in both `stockChanged` and `colorChanged`.
+The changes needed to achieve better testability would add significant complexity to the imperative implementation. In the past, I have therefore often settled on a middle ground similar to what is depicted in the code above.
 
-
+Let's have a look at how the same scenario could be implemented using reactive programming:
 
 ```swift
-Observable.combineLatest(stock, color) {
+let canBuy: Observable<Bool> = Observable.combineLatest(stock, color) {
     $0.canBuy($1)
-}.subscribe(onNext: { canBuy in
+}
+
+canBuy.subscribe(onNext: { canBuy in
     buyButton.enabled = canBuy
 })
 ```
 
-If you are striving for separation between data flow and side-effects, consider giving reactive programming a try to see how it can help implementing your principles.
+`stock` and `color` are two Observables that emit the latest stock information and color selection. I combine those two into an observable that emits a boolean whenever either stock or color changes. 
 
-[This talk](https://www.youtube.com/watch?v=A0VaIKK2ijM) by Brandon Williams.
+The side-effect is contained to the closure passed to the `subscribe` method. You'll be able to put almost all side-effects in `subscribe` closures. (Other places that make sense to have sid-effects include the subscription handler when creating an observable and the `do` operator.) By making this a rule, or convention, the code becomes easy to understand. Combined with the fact that observables are easily composable, the code becomes easy to test.
+
+The rules around where to put side-effects (e.g. `subscribe`) and where not to (e.g. `map`) are currently not enforcable by the language. You can use the [`@effects` annotation](https://github.com/apple/swift/blob/9ce3df106ebfc18e49d41730c31c7211bbab62dd/docs/HighLevelSILOptimizations.rst#effects-attribute) to tell the optimizer about side-effects or dependencies, allowing it to emit more efficient code, but it is not enforced by the compiler.
+
+If you try to achieve isolation of side-effects in your code, consider giving reactive programming a try to see how it can help implementing this principle.
+
+[This talk](https://www.youtube.com/watch?v=A0VaIKK2ijM) by Brandon Williams prompted me to write about this.
 
 
