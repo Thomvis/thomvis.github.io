@@ -16,4 +16,6 @@ This results in every call to `assertSymmetry` from `testSerialization` to be ex
 
 ![Failures in the actual test method](/media/xctest-failure2.jpg)
 
+This works not only for `XCTAssertEquals`, but also for `XCTAssert`, `XCTAssertNil`, `XCTFail` and any other XCTest assertion. On top of that, many third party testing libraries also support it, e.g. [Nimble](https://github.com/Quick/Nimble/blob/d0bea4ff70428c0fb30d26c8c1fa2500cd4570ff/Sources/Nimble/DSL.swift#L4) and [iOSSnapshotTestCase](https://github.com/uber/ios-snapshot-test-case/blob/e8418651f1cfae782163881e86c9457eef7c9525/FBSnapshotTestCase/SwiftSupport.swift#L11).
+
 All the right failures, in all the right places.
