@@ -84,6 +84,8 @@ You might have noticed from the list of differences above that a publisher can d
 
 Some operations might be better represented by a Future, so it's nice that we have the option to return something with that name and not just a generic Publisher that behaves like one. The Future type exposes this common behavior to the type system and can enforce it through type safety. On the other hand, when you go all in on reactive programming, you might find that most of your code does not make assumptions on the behavior of a Publisher, how many values and when it might emit.
 
-In any case, there is something left to be desired of Combine's `Future`. Any operation called on a `Future` returns a `Publisher`, even the ones that wouldn't change the behavior such as `map`. The `Future` instance is wrapped and hidden, the behavior no longer apparent at a glance. Apple [overloads operators](/2019/07/04/combine-types/) in other parts of Combine to prevent this, but it appears `Future` hasn't received the same treatment yet.
+In any case, there is something left to be desired of Combine's `Future`. The API for subscribing to a `Future` is the same as for any Publisher where it could have differentiated to make it clear at the point of use that a Future only ever emits one value or an error and never explicitly completes. 
+
+There's also room for improvement for operators on Future. Any operator called on a `Future` returns a `Publisher`, even the ones that wouldn't change the behavior such as `map`. The `Future` instance is wrapped and hidden as a result, the behavior no longer apparent at a glance. Apple [overloads operators](/2019/07/04/combine-types/) in other parts of Combine to prevent this, but it appears `Future` hasn't received the same treatment yet.
 
 [^1]: The `AnyPublisher` initializer that takes a subscribe closure disappeared in beta 3. Let's hope it comes back.
