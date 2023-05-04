@@ -3,6 +3,14 @@
 	font-size: 18pt;
 }
 
+.post h2 {
+	font-size: 18pt;
+}
+
+.post p {
+	font-size: 13pt;
+}
+
 #footer {
 	margin-left: auto;
 	margin-right: auto;
