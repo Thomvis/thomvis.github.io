@@ -3,6 +3,8 @@ layout: post
 title: "Testing our Shopping Apps with AI"
 ---
 
+I wrote a post about some of the work I've been doing at NewStore:
+
 > “Our platform is delivering 20+ shopping apps, trusted by brands in 40+ countries and rated five stars by millions of users worldwide. [...]
 > 
 > We have to be smart about what we test in the apps. Anything we want to test we’ll have to test 40+ times, which are the apps for 20+ brands on both iOS and Android. [...]

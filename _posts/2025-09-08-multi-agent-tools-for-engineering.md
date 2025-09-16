@@ -3,6 +3,8 @@ layout: post
 title: "Building multi-agent tools for engineering"
 ---
 
+I wrote a post about some of the work I've been doing at NewStore:
+
 > In this post we’ll discuss two multi-agent tools:
 > - A Slack-bot that helps us triage reported issues with our shopping apps
 > - A research agent that helps us respond to incidents [...]
