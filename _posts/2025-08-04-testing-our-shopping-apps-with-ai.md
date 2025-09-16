@@ -11,6 +11,6 @@ I wrote a post about some of the work I've been doing at NewStore:
 > 
 > We recently started a second initiative where we are building an AI agent that can test our apps. [...]
 > 
-> The AI UI testing agent is already replacing 20% of our test work and we’re looking to increase that to 45% over the course of the next releases.
+> The AI UI testing agent is already replacing 20% of our test work and we’re looking to increase that to 45% over the course of the next releases.”
 
 Read the full post over at the [NewStore Tech Blog](https://newstoretech.substack.com/p/testing-our-shopping-apps-with-ai).
